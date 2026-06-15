@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Firmas - Portal Baker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- ESTILOS BASE COMPARTIDOS CON TU INTRANET --- */
+        :root {
+            --primary-color: #1a73e8;
+            --background-color: #f8f9fa;
+            --text-color: #3c4043;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Menú Lateral (Idéntico a tu index) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-bottom: 1px solid #f1f3f4;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar a {
+            padding: 14px 24px;
+            color: #5f6368;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #f1f3f4;
+            color: var(--primary-color);
+        }
+
+        .sidebar a.active {
+            background-color: #e8f0fe;
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 20px;
+        }
+
+        /* Contenedor Principal */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 40px;
+            background-color: var(--background-color);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .header-modulo {
+            margin-bottom: 30px;
+        }
+
+        .header-modulo h1 {
+            font-size: 28px;
+            color: #202124;
+            margin: 0 0 8px 0;
+        }
+
+        .header-modulo p {
+            color: #5f6368;
+            margin: 0;
+        }
+
+        /* --- CONTENEDOR DEL FORMULARIO Y CANVAS (DOS COLUMNAS) --- */
+        .modulo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .modulo-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #202124;
+            border-bottom: 1px solid #f1f3f4;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #5f6368;
+        }
+
+        input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Área de Vista Previa */
+        .preview-box {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #dadce0;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            min-height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        canvas {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            background-color: #fff;
+        }
+
+        /* Botones de Descarga */
+        .btn-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-png {
+            background-color: #137333;
+            color: white;
+        }
+
+        .btn-png:hover {
+            background-color: #0f5b28;
+        }
+
+        .btn-jpg {
+            background-color: #e67c73;
+            color: white;
+        }
+
+        .btn-jpg:hover {
+            background-color: #d9655b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-building"></i>
+            <span>Portal Baker</span>
+        </div>
+        <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
+        <a href="https://ibakercl.sharepoint.com/sites/TI-Baker" target="_blank"><i class="fas fa-laptop-code"></i> Soporte TI</a>
+        <a href="firmas.html" class="active"><i class="fas fa-signature"></i> Generador de Firmas</a>
+        <a href="#procedimientos"><i class="fas fa-file-alt"></i> Procedimientos</a>
+        <a href="#directorio"><i class="fas fa-address-book"></i> Directorio</a>
+        <a href="#sistemas"><i class="fas fa-server"></i> Sistemas Corporativos</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-modulo">
+            <h1>Generador Oficial de Pie de Firmas</h1>
+            <p>Automatiza y estandariza las firmas de correo para Outlook de las distintas empresas y proyectos del grupo.</p>
+        </div>
+
+        <div class="modulo-container">
+            <div class="panel">
+                <div class="panel-title">1. Datos Corporativos</div>
+                
+                <div class="form-group">
+                    <label for="plantilla">Selecciona la Empresa / Formato:</label>
+                    <select id="plantilla" onchange="cambiarPlantilla()">
+                        <option value="ROMERAL_Y_BAKER.png">Romeral y Baker (Fusión)</option>
+                        <option value="ROMERAL.jpg">Constructora Romeral</option>
+                        <option value="brotar.png">Inmobiliaria Brotar</option>
+                        <option value="cmc.jpg">CMC</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo:</label>
+                    <input type="text" id="nombre" value="Darío Villaseca" oninput="actualizarFirma()">
+                </div>
+
+                <div class="form-group">
+                    <label for="cargo">Cargo o Área:</label>
+                    <input type="text" id="cargo" value="Encargado área TI" oninput="actualizarFirma()">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono Corporativo (Opcional - dejar vacío si no aplica):</label>
+                    <input type="text" id="telefono" value="569 6180 4390" oninput="actualizarFirma()">
+                </div>
+
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico:</label>
+                    <input type="email" id="correo" value="dvillaseca@ibaker.cl" oninput="actualizarFirma()">
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección (Oficina u Obra):</label>
+                    <input type="text" id="direccion" value="Av. Bosque Nte 0177 OF 1002, Las Condes" oninput="actualizarFirma()">
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">2. Vista Previa y Descarga</div>
+                
+                <div class="preview-box">
+                    <canvas id="canvasFirma"></canvas>
+                </div>
+
+                <div class="btn-container">
+                    <a id="downloadPng" class="btn btn-png" href="#" onclick="descargar('png')"><i class="fas fa-file-download"></i> Descargar en PNG</a>
+                    <a id="downloadJpg" class="btn btn-jpg" href="#" onclick="descargar('jpg')"><i class="fas fa-file-image"></i> Descargar en JPG</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mapeo preciso de coordenadas X,Y adaptadas al tamaño exacto de cada imagen subida
+        const CONFIG_EMPRESAS = {
+            "ROMERAL_Y_BAKER.png": { xTexto: 250, yNombre: 32, yCargo: 55, yContacto: 100, yDireccion: 138, fontScale: 1 },
+            "ROMERAL.jpg":         { xTexto: 310, yNombre: 32, yCargo: 55, yContacto: 100, yDireccion: 136, fontScale: 1 },
+            "brotar.png":          { xTexto: 280, yNombre: 32, yCargo: 55, yContacto: 100, yDireccion: 136, fontScale: 1 },
+            "cmc.jpg":             { xTexto: 240, yNombre: 32, yCargo: 55, yContacto: 100, yDireccion: 136, fontScale: 1 }
+        };
+
+        const canvas = document.getElementById('canvasFirma');
+        const ctx = canvas.getContext('2d');
+        const imgPlantilla = new Image();
+
+        window.onload = function() {
+            cambiarPlantilla();
+        };
+
+        function cambiarPlantilla() {
+            const archivo = document.getElementById('plantilla').value;
+            imgPlantilla.src = archivo;
+        }
+
+        imgPlantilla.onload = function() {
+            actualizarFirma();
+        };
+
+        function actualizarFirma() {
+            const archivoSel = document.getElementById('plantilla').value;
+            const config = CONFIG_EMPRESAS[archivoSel];
+
+            // Forzar las proporciones del canvas al tamaño nativo de cada imagen
+            canvas.width = imgPlantilla.width;
+            canvas.height = imgPlantilla.height;
+
+            // 1. Dibujar imagen de fondo limpia
+            ctx.drawImage(imgPlantilla, 0, 0);
+
+            // Obtener variables de los inputs
+            const nombre = document.getElementById('nombre').value;
+            const cargo = document.getElementById('cargo').value;
+            const telefono = document.getElementById('telefono').value.trim();
+            const correo = document.getElementById('correo').value;
+            const direccion = document.getElementById('direccion').value;
+
+            // 2. Renderizar Nombre (Negrita)
+            ctx.font = "bold 15px 'Roboto', 'Arial', sans-serif";
+            ctx.fillStyle = "#1a1a1a";
+            ctx.fillText(nombre, config.xTexto, config.yNombre);
+
+            // 3. Renderizar Cargo
+            ctx.font = "12px 'Roboto', 'Arial', sans-serif";
+            ctx.fillStyle = "#5f6368";
+            ctx.fillText(cargo, config.xTexto, config.yCargo);
+
+            // 4. Renderizar Bloque de Contacto Dinámico
+            ctx.font = "11px 'Roboto', 'Arial', sans-serif";
+            ctx.fillStyle = "#3c4043";
+            let yLineaActual = config.yContacto;
+
+            if (telefono !== "") {
+                ctx.fillText(telefono, config.xTexto, yLineaActual);
+                yLineaActual += 22; // Salto de línea adaptado al alto de 150px
+            }
+
+            ctx.fillText(correo, config.xTexto, yLineaActual);
+
+            // 5. Renderizar Dirección
+            ctx.fillText(direccion, config.xTexto, config.yDireccion);
+        }
+
+        // Manejo de errores visuales si las imágenes no están en la ruta
+        imgPlantilla.onerror = function() {
+            canvas.width = 550;
+            canvas.height = 150;
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ea4335";
+            ctx.font = "13px Arial";
+            ctx.fillText("Error: No se encontró la imagen base seleccionada.", 20, 60);
+            ctx.fillText("Asegúrate de guardarla en la misma carpeta que este HTML.", 20, 85);
+        };
+
+        // Función para compilar el archivo final y forzar la descarga
+        function descargar(formato) {
+            const nombreLimpio = document.getElementById('nombre').value.toLowerCase().replace(/[^a-z0-9]/g, "_");
+            
+            if (formato === 'jpg') {
+                // Crear un canvas secundario plano para remover transparencias (evitar fondos negros en JPG)
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.fillStyle = "#FFFFFF";
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.95);
+                const link = document.getElementById('downloadJpg');
+                link.download = `firma_${nombreLimpio}.jpg`;
+                link.href = dataUrl;
+            } else {
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.getElementById('downloadPng');
+                link.download = `firma_${nombreLimpio}.png`;
+                link.href = dataUrl;
+            }
+        }
+    </script>
+</body>
+</html>
